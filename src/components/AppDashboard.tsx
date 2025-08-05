@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "./AppHeader";
 import PrimaryNavTabs from "./PrimaryNavTabs";
-import UniversalFilterBar from "./UniversalFilterBar";
+import UniversalFilterBar, { loadFilters } from "./UniversalFilterBar";
 import KpiCard from "./KpiCard";
 import LineChart from "./LineChart";
 import BarChart from "./BarChart";
@@ -13,14 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const AppDashboard = () => {
   const { id } = useParams<{ id: string }>();
-  const [filters, setFilters] = useState({
-    dateRange: "Last 7 days",
-    metro: "All Metros",
-    nccs: "All NCCS",
-    gender: "All Genders"
-  });
-
-  const [userRole, setUserRole] = useState("Executive");
+  const [filters, setFilters] = useState(loadFilters)
 
   // Mock app data based on ID
   const appData = {
@@ -31,7 +24,7 @@ const AppDashboard = () => {
       avatar: "📷"
     },
     whatsapp: {
-      name: "WhatsApp", 
+      name: "WhatsApp",
       publisher: "Meta",
       category: "Social Media",
       avatar: "💬"
@@ -39,19 +32,19 @@ const AppDashboard = () => {
     youtube: {
       name: "YouTube",
       publisher: "Google",
-      category: "Entertainment", 
+      category: "Entertainment",
       avatar: "📺"
     },
     facebook: {
       name: "Facebook",
-      publisher: "Meta", 
+      publisher: "Meta",
       category: "Social Media",
       avatar: "📘"
     },
     telegram: {
       name: "Telegram",
       publisher: "Telegram",
-      category: "Social Media", 
+      category: "Social Media",
       avatar: "✈️"
     },
     netflix: {
@@ -107,7 +100,7 @@ const AppDashboard = () => {
   // Generate daily trend data based on filter selection
   const generateTrendData = () => {
     const dateRange = filters.dateRange.toLowerCase();
-    
+
     if (dateRange.includes('7 days')) {
       return [
         { date: "Dec 4", value: 7.8 },
@@ -155,7 +148,7 @@ const AppDashboard = () => {
         { date: "Dec 10", value: 8.6 }
       ];
     }
-    
+
     // Default/custom range
     return [
       { date: "Dec 7", value: 8.3 },
@@ -169,18 +162,18 @@ const AppDashboard = () => {
   const generateComparisonData = () => {
     const dateRange = filters.dateRange.toLowerCase();
     const trendData = generateTrendData();
-    
+
     const baseData: { [key: string]: any[] } = {};
-    
+
     // Generate comparison data for each app with similar pattern but different values
     Object.keys(appData).forEach(appKey => {
       if (appKey !== id) {
         baseData[appKey] = trendData.map((point, index) => {
-          const multiplier = appKey === 'whatsapp' ? 1.4 : 
-                           appKey === 'youtube' ? 1.1 : 
-                           appKey === 'facebook' ? 0.7 : 
-                           appKey === 'telegram' ? 0.4 : 0.8;
-          
+          const multiplier = appKey === 'whatsapp' ? 1.4 :
+            appKey === 'youtube' ? 1.1 :
+              appKey === 'facebook' ? 0.7 :
+                appKey === 'telegram' ? 0.4 : 0.8;
+
           return {
             date: point.date,
             value: parseFloat((point.value * multiplier + (Math.random() - 0.5) * 0.3).toFixed(1))
@@ -188,7 +181,7 @@ const AppDashboard = () => {
         });
       }
     });
-    
+
     return baseData;
   };
 
@@ -317,17 +310,16 @@ const AppDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <AppHeader 
-        breadcrumbs={["Dashboard", "Category", currentApp.category, currentApp.name]}
+      <AppHeader
+        breadcrumbs={["App", currentApp.category, currentApp.name]}
       />
-      
-      <PrimaryNavTabs 
+
+      <PrimaryNavTabs
         activeTab="app"
         onTabChange={(tab) => console.log(`Switched to ${tab}`)}
       />
-      
-      <UniversalFilterBar 
-        filters={filters}
+
+      <UniversalFilterBar
         onFiltersChange={setFilters}
       />
 

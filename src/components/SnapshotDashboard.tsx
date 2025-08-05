@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Eye, Clock } from "lucide-react";
 import AppHeader from "./AppHeader";
 import PrimaryNavTabs from "./PrimaryNavTabs";
-import UniversalFilterBar from "./UniversalFilterBar";
+import UniversalFilterBar, { loadFilters } from "./UniversalFilterBar";
 import KpiCard from "./KpiCard";
 import RankedList from "./RankedList";
 import BarChart from "./BarChart";
@@ -11,14 +11,7 @@ import DonutChart from "./DonutChart";
 import ExportButton from "./ExportButton";
 
 const SnapshotDashboard = () => {
-  const [filters, setFilters] = useState({
-    dateRange: "Last 7 days",
-    metro: "All Metros",
-    nccs: "All NCCS",
-    gender: "All Genders"
-  });
-
-  const [userRole, setUserRole] = useState("Executive");
+  const [filters, setFilters] = useState(loadFilters)
 
   // Sample data
   const kpiData = [
@@ -29,14 +22,14 @@ const SnapshotDashboard = () => {
       trend: [20, 25, 30, 28, 35, 32, 40]
     },
     {
-      headline: "Total WAU", 
+      headline: "Total WAU",
       value: "8.7M",
       delta: { value: 8.2, period: "vs last week" },
       trend: [30, 35, 32, 38, 42, 40, 45]
     },
     {
       headline: "Total MAU",
-      value: "24.1M", 
+      value: "24.1M",
       delta: { value: -2.1, period: "vs last month" },
       trend: [45, 42, 38, 35, 40, 38, 36]
     }
@@ -115,17 +108,16 @@ const SnapshotDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <AppHeader 
+      <AppHeader
         breadcrumbs={["Dashboard"]}
       />
-      
-      <PrimaryNavTabs 
+
+      <PrimaryNavTabs
         activeTab="home"
         onTabChange={(tab) => console.log(`Switched to ${tab}`)}
       />
-      
-      <UniversalFilterBar 
-        filters={filters}
+
+      <UniversalFilterBar
         onFiltersChange={setFilters}
       />
 

@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Users, Film, ShoppingCart } from "lucide-react";
 import AppHeader from "./AppHeader";
 import PrimaryNavTabs from "./PrimaryNavTabs";
-import UniversalFilterBar from "./UniversalFilterBar";
+import UniversalFilterBar, { loadFilters } from "./UniversalFilterBar";
 import KpiCard from "./KpiCard";
 import RankedList from "./RankedList";
 import LineChart from "./LineChart";
@@ -14,13 +14,7 @@ import CategoryBreadcrumb from "./CategoryBreadcrumb";
 
 const CategoryDashboard = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [filters, setFilters] = useState({
-    dateRange: "Last 7 days",
-    metro: "All Metros",
-    nccs: "All NCCS",
-    gender: "All Genders",
-    ageGroup: "All Ages"
-  });
+  const [filters, setFilters] = useState(loadFilters)
 
   // Category data based on slug
   const categoryData = {
@@ -191,17 +185,16 @@ const CategoryDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <AppHeader 
-        breadcrumbs={["Dashboard", "Category", currentCategory.name]}
+      <AppHeader
+        breadcrumbs={["Category", currentCategory.name]}
       />
-      
-      <PrimaryNavTabs 
+
+      <PrimaryNavTabs
         activeTab="category"
         onTabChange={(tab) => console.log(`Switched to ${tab}`)}
       />
-      
-      <UniversalFilterBar 
-        filters={filters}
+
+      <UniversalFilterBar
         onFiltersChange={setFilters}
       />
 

@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useEffect, useState } from "react";
 
 interface FilterState {
   dateRange: string;
@@ -21,21 +22,41 @@ interface UniversalFilterBarProps {
   onFiltersChange?: (filters: FilterState) => void;
 }
 
-const UniversalFilterBar = ({ 
-  filters = { dateRange: "Last 7 days", metro: "All Metros", nccs: "All NCCS", gender: "All Genders", ageGroup: "All Ages" },
-  onFiltersChange 
+const defaultFilters = {
+  dateRange: "Last 7 days",
+  metro: "All Metros",
+  nccs: "All NCCS",
+  gender: "All Genders",
+  ageGroup: "All Ages"
+};
+
+export const loadFilters = () => {
+  const savedFilters = JSON.parse(localStorage.getItem("universalFilters") || "{}");
+  return { ...defaultFilters, ...savedFilters };
+}
+
+const UniversalFilterBar = ({
+  onFiltersChange
 }: UniversalFilterBarProps) => {
-  
+
+  const [filters, setFilters] = useState(loadFilters);
+
   const updateFilter = (key: keyof FilterState, value: string) => {
     const newFilters = { ...filters, [key]: value };
-    onFiltersChange?.(newFilters);
+    localStorage.setItem("universalFilters", JSON.stringify(newFilters));
+    setFilters(newFilters);
   };
+
+  useEffect(() => {
+    onFiltersChange?.(filters);
+  }, [filters, onFiltersChange])
 
   return (
     <div className="bg-white border-b border-[#E2E8F0] px-6 py-3">
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-[#64748B] font-medium">Filters:</span>
-        
+      <span className="text-sm text-[#64748B] font-medium block md:hidden">Filters:</span>
+
+      <div className="flex flex-wrap items-start justify-start md:items-center space-x-2 space-y-2 md:space-y-0">
+        <span className="text-sm text-[#64748B] font-medium hidden md:block">Filters:</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center space-x-2 bg-white border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]">
@@ -45,7 +66,7 @@ const UniversalFilterBar = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
             {["Last 7 days", "Last 30 days", "Last 90 days", "Custom range"].map((range) => (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 key={range}
                 onClick={() => updateFilter("dateRange", range)}
                 className="text-[#0F172A] hover:bg-[#F8FAFC]"
@@ -65,7 +86,7 @@ const UniversalFilterBar = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
             {["All Metros", "Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Hyderabad"].map((metro) => (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 key={metro}
                 onClick={() => updateFilter("metro", metro)}
                 className="text-[#0F172A] hover:bg-[#F8FAFC]"
@@ -85,7 +106,7 @@ const UniversalFilterBar = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
             {["All NCCS", "A1", "A2", "B1", "B2", "C", "D", "E"].map((nccs) => (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 key={nccs}
                 onClick={() => updateFilter("nccs", nccs)}
                 className="text-[#0F172A] hover:bg-[#F8FAFC]"
@@ -105,7 +126,7 @@ const UniversalFilterBar = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
             {["All Genders", "Male", "Female"].map((gender) => (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 key={gender}
                 onClick={() => updateFilter("gender", gender)}
                 className="text-[#0F172A] hover:bg-[#F8FAFC]"
@@ -125,7 +146,7 @@ const UniversalFilterBar = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
             {["All Ages", "13-17", "18-24", "25-34", "35-44", "45-54", "55+"].map((ageGroup) => (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 key={ageGroup}
                 onClick={() => updateFilter("ageGroup", ageGroup)}
                 className="text-[#0F172A] hover:bg-[#F8FAFC]"
