@@ -1,4 +1,6 @@
 
+import { logout } from "@/utils/auth";
+import { LogoutIcon } from "@/utils/icons";
 import { Search } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -10,20 +12,24 @@ const AppHeader = ({ breadcrumbs = ["Dashboard"] }: AppHeaderProps) => {
   return (
     <header className="border-b border-[#E2E8F0] bg-[#F8FAFC] px-6 py-4">
       <div className="flex-col items-center space-y-6">
-        <div className="flex items-center">
-          <Link to="/home" className="">
-            <img
-              src="/assets/images/logo_large.png"
-              className="w-[48px] h-[48px]"
-            />
-          </Link>
+        <div className="flex flex-row items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Link to="/home" className="">
+              <img
+                src="/assets/images/logo_large.png"
+                className="w-[48px] h-[48px]"
+              />
+            </Link>
 
-          <Link
-            to="/home"
-            className="text-xl font-bold text-brand-blue ml-5"
-          >
-            SYNC Appography
-          </Link>
+            <Link
+              to="/home"
+              className="text-xl font-bold text-brand-blue ml-5"
+            >
+              SYNC Appography
+            </Link>
+          </div>
+
+          <LogoutIcon className="w-4 h-4" onClick={logout} />
         </div>
 
         <div className="flex flex-col items-start md:items-center md:justify-between md:space-x-6 space-y-2 md:flex-row">
