@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Eye, Clock } from "lucide-react";
 import AppHeader from "./AppHeader";
 import PrimaryNavTabs from "./PrimaryNavTabs";
@@ -9,31 +9,32 @@ import RankedList from "./RankedList";
 import BarChart from "./BarChart";
 import DonutChart from "./DonutChart";
 import ExportButton from "./ExportButton";
+import { loadClickhouseClient } from "@/utils/general";
 
 const SnapshotDashboard = () => {
   const [filters, setFilters] = useState(loadFilters)
 
   // Sample data
-  const kpiData = [
+  const [kpiData, setKpiData] = useState([
     {
       headline: "Total DAU",
-      value: "2.4M",
-      delta: { value: 12.5, period: "vs last day" },
-      trend: [20, 25, 30, 28, 35, 32, 40]
+      value: "",
+      delta: { value: 0, period: "vs last day" },
+      trend: []
     },
     {
       headline: "Total WAU",
-      value: "8.7M",
-      delta: { value: 8.2, period: "vs last week" },
-      trend: [30, 35, 32, 38, 42, 40, 45]
+      value: "",
+      delta: { value: 0, period: "vs last week" },
+      trend: []
     },
     {
       headline: "Total MAU",
       value: "24.1M",
-      delta: { value: -2.1, period: "vs last month" },
-      trend: [45, 42, 38, 35, 40, 38, 36]
+      delta: { value: 0, period: "vs last month" },
+      trend: []
     }
-  ];
+  ])
 
   const topOpenedApps = [
     { rank: 1, label: "WhatsApp", subtitle: "Social", metric: "2.1M", change: 5.2, logo: "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" },
@@ -105,6 +106,80 @@ const SnapshotDashboard = () => {
     console.log(`Navigating to app: ${item.label}`);
     // Implement navigation to app dashboard
   };
+
+  const client = useMemo(loadClickhouseClient, []);
+
+  useEffect(() => {
+    const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
+    const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
+    const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
+    const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
+
+    const q = `WITH 
+    (
+        SELECT max(toDate(start_ts)) 
+        FROM prod.app_usage_stat
+        WHERE start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+    ) AS max_date
+
+SELECT
+    COUNT(DISTINCT if(toDate(aus.start_ts) = max_date, aus.token, NULL)) AS DAU,
+    COUNT(DISTINCT if(toDate(aus.start_ts) BETWEEN (max_date - INTERVAL 1 DAY) AND max_date, aus.token, NULL)) AS LDAU,
+    COUNT(DISTINCT if(toDate(aus.start_ts) >= (max_date - INTERVAL 7 DAY), aus.token, NULL)) AS WAU,
+    COUNT(DISTINCT if(toDate(aus.start_ts) BETWEEN (max_date - INTERVAL 14 DAY) AND (max_date - INTERVAL 7 DAY), aus.token, NULL)) AS LWAU,
+    COUNT(DISTINCT if(toDate(aus.start_ts) >= (max_date - INTERVAL 30 DAY), aus.token, NULL)) AS MAU,
+    COUNT(DISTINCT if(toDate(aus.start_ts) BETWEEN (max_date - INTERVAL 60 DAY) AND (max_date - INTERVAL 30 DAY), aus.token, NULL)) AS LMAU
+FROM prod.app_usage_stat AS aus
+INNER JOIN prod.sdk_device_projections AS proj
+    ON aus.token = proj.device_id
+WHERE 
+    aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+    ${metrosFilter}
+    ${nccsFilter}
+    ${genderFilter}
+    ${ageGroupFilter}`
+    // GROUP BY
+    //     proj.center,
+    //     proj.sec,
+    //     proj.age_group,
+    //     proj.gender`
+
+
+    client.query({
+      query: q,
+      format: 'JSONEachRow',
+      query_params: {
+        var_starttime: filters.dateRange.start.format("YYYY-MM-DD HH:mm:ss"),
+        var_endtime: filters.dateRange.end.format("YYYY-MM-DD HH:mm:ss"),
+        metros_filter: filters.metro,
+        nccs_filter: filters.nccs,
+        gender_filter: filters.gender,
+        age_group_filter: filters.ageGroup
+      }
+    })
+      .then(resultSet => resultSet.json())
+      .then(data => {
+        console.log("KPI Data:", data);
+
+        //   value: "",
+        // delta: { value: 0, period: "vs last day" },
+
+        let newKpidata = JSON.parse(JSON.stringify(kpiData));
+        newKpidata = newKpidata.map((kpi, index) => {
+          switch (kpi.headline) {
+            case "Total DAU":
+              return { ...kpi, value: data[0]['DAU'], delta: { ...kpi.delta, value: data[0]['LDAU'] } };
+            case "Total WAU":
+              return { ...kpi, value: data[0]['WAU'], delta: { ...kpi.delta, value: data[0]['LWAU'] } };
+            case "Total MAU":
+              return { ...kpi, value: data[0]['MAU'], delta: { ...kpi.delta, value: data[0]['LMAU'] } };
+          }
+        })
+
+        setKpiData(newKpidata);
+      })
+
+  }, [filters])
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
