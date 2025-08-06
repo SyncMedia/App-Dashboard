@@ -8,9 +8,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
+import moment from "moment";
+import Datepicker from "react-tailwindcss-datepicker";
+import { isMobile } from 'react-device-detect';
+import { set } from "date-fns";
 
 interface FilterState {
-  dateRange: string;
+  dateRange: {
+    start: moment.Moment;
+    end: moment.Moment;
+  };
   metro: string;
   nccs: string;
   gender: string;
@@ -23,15 +30,36 @@ interface UniversalFilterBarProps {
 }
 
 const defaultFilters = {
-  dateRange: "Last 7 days",
+  dateRange: {
+    start: moment().add(-7, 'days'),
+    end: moment(),
+  },
   metro: "All Metros",
   nccs: "All NCCS",
   gender: "All Genders",
   ageGroup: "All Ages"
 };
 
-export const loadFilters = () => {
+export const loadFilters = (): {
+  dateRange: { start: moment.Moment; end: moment.Moment };
+  metro: string;
+  nccs: string;
+  gender: string;
+  ageGroup: string;
+} => {
   const savedFilters = JSON.parse(localStorage.getItem("universalFilters") || "{}");
+  if ('dateRange' in savedFilters) {
+    savedFilters.dateRange = {
+      start: moment(savedFilters.dateRange.start),
+      end: moment(savedFilters.dateRange.end)
+    };
+  } else {
+    savedFilters.dateRange = {
+      start: moment().add(-7, 'days'),
+      end: moment(),
+    };
+  }
+
   return { ...defaultFilters, ...savedFilters };
 }
 
@@ -47,9 +75,33 @@ const UniversalFilterBar = ({
     setFilters(newFilters);
   };
 
+  const setValue = (value: { startDate: Date | null; endDate: Date | null }) => {
+    if (!value.startDate || !value.endDate) return;
+
+    const newFilters = { ...filters };
+
+    newFilters.dateRange = {
+      start: moment(value.startDate),
+      end: moment(value.endDate)
+    }
+
+    localStorage.setItem("universalFilters", JSON.stringify(newFilters));
+    setFilters(newFilters);
+
+    _setValue(value)
+  }
+
   useEffect(() => {
     onFiltersChange?.(filters);
   }, [filters, onFiltersChange])
+
+  const [value, _setValue] = useState(() => {
+    const filters = loadFilters();
+    return {
+      startDate: filters.dateRange.start.toDate(),
+      endDate: filters.dateRange.end.toDate()
+    }
+  });
 
   return (
     <div className="bg-white border-b border-[#E2E8F0] px-6 py-3">
@@ -57,26 +109,19 @@ const UniversalFilterBar = ({
 
       <div className="flex flex-wrap items-start justify-start md:items-center space-x-2 space-y-2 md:space-y-0">
         <span className="text-sm text-[#64748B] font-medium hidden md:block">Filters:</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex items-center space-x-2 bg-white border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]">
-              <Calendar className="w-4 h-4" />
-              <span>{filters.dateRange}</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
-            {["Last 7 days", "Last 30 days", "Last 90 days", "Custom range"].map((range) => (
-              <DropdownMenuItem
-                key={range}
-                onClick={() => updateFilter("dateRange", range)}
-                className="text-[#0F172A] hover:bg-[#F8FAFC]"
-              >
-                {range}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
+        <Datepicker
+          primaryColor={"fuchsia"}
+          placeholder="Select Date Range"
+          showShortcuts={!isMobile}
+          useRange={!isMobile}
+          showFooter={false}
+          displayFormat="DD MMM YYYY"
+          minDate={moment().add(-6, 'months').toDate()}
+          maxDate={moment().toDate()}
+          value={value}
+          containerClassName={"relative w-auto border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border items-center rounded-md"}
+          onChange={setValue}
+        />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center space-x-2 bg-white border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8FAFC]">

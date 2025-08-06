@@ -99,55 +99,9 @@ const AppDashboard = () => {
 
   // Generate daily trend data based on filter selection
   const generateTrendData = () => {
-    const dateRange = filters.dateRange.toLowerCase();
+    // const dateRange = filters.dateRange.toLowerCase();
 
-    if (dateRange.includes('7 days')) {
-      return [
-        { date: "Dec 4", value: 7.8 },
-        { date: "Dec 5", value: 8.1 },
-        { date: "Dec 6", value: 7.9 },
-        { date: "Dec 7", value: 8.3 },
-        { date: "Dec 8", value: 8.5 },
-        { date: "Dec 9", value: 8.2 },
-        { date: "Dec 10", value: 8.6 }
-      ];
-    } else if (dateRange.includes('30 days')) {
-      return [
-        { date: "Nov 11", value: 6.8 },
-        { date: "Nov 13", value: 6.9 },
-        { date: "Nov 15", value: 7.1 },
-        { date: "Nov 17", value: 7.0 },
-        { date: "Nov 19", value: 7.3 },
-        { date: "Nov 21", value: 7.2 },
-        { date: "Nov 23", value: 7.5 },
-        { date: "Nov 25", value: 7.4 },
-        { date: "Nov 27", value: 7.6 },
-        { date: "Nov 29", value: 7.8 },
-        { date: "Dec 1", value: 7.7 },
-        { date: "Dec 3", value: 8.0 },
-        { date: "Dec 5", value: 8.1 },
-        { date: "Dec 7", value: 8.3 },
-        { date: "Dec 9", value: 8.2 },
-        { date: "Dec 10", value: 8.6 }
-      ];
-    } else if (dateRange.includes('90 days')) {
-      return [
-        { date: "Sep 12", value: 5.8 },
-        { date: "Sep 19", value: 6.0 },
-        { date: "Sep 26", value: 6.2 },
-        { date: "Oct 3", value: 6.1 },
-        { date: "Oct 10", value: 6.4 },
-        { date: "Oct 17", value: 6.6 },
-        { date: "Oct 24", value: 6.8 },
-        { date: "Oct 31", value: 6.9 },
-        { date: "Nov 7", value: 7.1 },
-        { date: "Nov 14", value: 7.3 },
-        { date: "Nov 21", value: 7.5 },
-        { date: "Nov 28", value: 7.7 },
-        { date: "Dec 5", value: 8.1 },
-        { date: "Dec 10", value: 8.6 }
-      ];
-    }
+
 
     // Default/custom range
     return [
@@ -160,7 +114,7 @@ const AppDashboard = () => {
 
   // Generate comparison data for apps based on current filter
   const generateComparisonData = () => {
-    const dateRange = filters.dateRange.toLowerCase();
+    // const dateRange = filters.dateRange.toLowerCase();
     const trendData = generateTrendData();
 
     const baseData: { [key: string]: any[] } = {};
@@ -291,16 +245,16 @@ const AppDashboard = () => {
 
   // Generate dynamic title based on date filter
   const getTrendTitle = () => {
-    const dateRange = filters.dateRange.toLowerCase();
-    if (dateRange.includes('7 days')) {
-      return 'Daily Active Users - Last 7 Days';
-    } else if (dateRange.includes('30 days')) {
-      return 'Daily Active Users - Last 30 Days';
-    } else if (dateRange.includes('90 days')) {
-      return 'Daily Active Users - Last 90 Days';
-    } else if (dateRange.includes('custom')) {
-      return 'Daily Active Users - Custom Range';
-    }
+    // const dateRange = filters.dateRange.toLowerCase();
+    // if (dateRange.includes('7 days')) {
+    //   return 'Daily Active Users - Last 7 Days';
+    // } else if (dateRange.includes('30 days')) {
+    //   return 'Daily Active Users - Last 30 Days';
+    // } else if (dateRange.includes('90 days')) {
+    //   return 'Daily Active Users - Last 90 Days';
+    // } else if (dateRange.includes('custom')) {
+    //   return 'Daily Active Users - Custom Range';
+    // }
     return 'Daily Active Users Trend';
   };
 

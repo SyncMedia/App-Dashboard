@@ -83,31 +83,31 @@ const CategoryDashboard = () => {
 
   // Generate daily trend data based on selected date range
   const generateDailyTrendData = () => {
-    const dateRange = filters.dateRange.toLowerCase();
-    if (dateRange.includes('7 days')) {
-      return [
-        { date: "Mon", value: 8.2 },
-        { date: "Tue", value: 9.1 },
-        { date: "Wed", value: 10.4 },
-        { date: "Thu", value: 11.8 },
-        { date: "Fri", value: 12.4 },
-        { date: "Sat", value: 11.9 },
-        { date: "Sun", value: 10.6 }
-      ];
-    } else if (dateRange.includes('30 days')) {
-      return [
-        { date: "Week 1", value: 8.2 },
-        { date: "Week 2", value: 9.1 },
-        { date: "Week 3", value: 10.4 },
-        { date: "Week 4", value: 12.4 }
-      ];
-    } else if (dateRange.includes('90 days')) {
-      return [
-        { date: "Month 1", value: 7.8 },
-        { date: "Month 2", value: 9.2 },
-        { date: "Month 3", value: 12.4 }
-      ];
-    }
+    // const dateRange = filters.dateRange.toLowerCase();
+    // if (dateRange.includes('7 days')) {
+    //   return [
+    //     { date: "Mon", value: 8.2 },
+    //     { date: "Tue", value: 9.1 },
+    //     { date: "Wed", value: 10.4 },
+    //     { date: "Thu", value: 11.8 },
+    //     { date: "Fri", value: 12.4 },
+    //     { date: "Sat", value: 11.9 },
+    //     { date: "Sun", value: 10.6 }
+    //   ];
+    // } else if (dateRange.includes('30 days')) {
+    //   return [
+    //     { date: "Week 1", value: 8.2 },
+    //     { date: "Week 2", value: 9.1 },
+    //     { date: "Week 3", value: 10.4 },
+    //     { date: "Week 4", value: 12.4 }
+    //   ];
+    // } else if (dateRange.includes('90 days')) {
+    //   return [
+    //     { date: "Month 1", value: 7.8 },
+    //     { date: "Month 2", value: 9.2 },
+    //     { date: "Month 3", value: 12.4 }
+    //   ];
+    // }
     // Default to daily for last 7 days
     return [
       { date: "Mon", value: 8.2 },
@@ -161,16 +161,16 @@ const CategoryDashboard = () => {
 
   // Generate dynamic title based on date filter
   const getTrendTitle = () => {
-    const dateRange = filters.dateRange.toLowerCase();
-    if (dateRange.includes('7 days')) {
-      return 'Daily Active Users - Last 7 Days';
-    } else if (dateRange.includes('30 days')) {
-      return 'Weekly Active Users - Last 30 Days';
-    } else if (dateRange.includes('90 days')) {
-      return 'Monthly Active Users - Last 90 Days';
-    } else if (dateRange.includes('custom')) {
-      return 'Daily Active Users - Custom Range';
-    }
+    // const dateRange = filters.dateRange.toLowerCase();
+    // if (dateRange.includes('7 days')) {
+    //   return 'Daily Active Users - Last 7 Days';
+    // } else if (dateRange.includes('30 days')) {
+    //   return 'Weekly Active Users - Last 30 Days';
+    // } else if (dateRange.includes('90 days')) {
+    //   return 'Monthly Active Users - Last 90 Days';
+    // } else if (dateRange.includes('custom')) {
+    //   return 'Daily Active Users - Custom Range';
+    // }
     return 'Daily Active Users - Last 7 Days';
   };
 

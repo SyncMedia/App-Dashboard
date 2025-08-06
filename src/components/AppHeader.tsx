@@ -29,7 +29,7 @@ const AppHeader = ({ breadcrumbs = ["Dashboard"] }: AppHeaderProps) => {
             </Link>
           </div>
 
-          <LogoutIcon className="w-4 h-4" onClick={logout} />
+          <LogoutIcon className="w-4 h-4 cursor-pointer" onClick={logout} />
         </div>
 
         <div className="flex flex-col items-start md:items-center md:justify-between md:space-x-6 space-y-2 md:flex-row">
