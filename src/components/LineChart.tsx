@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface LineData {
+export interface LineData {
+  sdate?: string;
   date: string;
   value: number;
 }
@@ -30,18 +31,18 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
 
   const maxValue = comparisonData && compareCategory !== "none"
     ? Math.max(
-        ...data.map(d => d.value),
-        ...comparisonData[compareCategory]?.map(d => d.value) || []
-      )
+      ...data.map(d => d.value),
+      ...comparisonData[compareCategory]?.map(d => d.value) || []
+    )
     : Math.max(...data.map(d => d.value));
-  
+
   const minValue = comparisonData && compareCategory !== "none"
     ? Math.min(
-        ...data.map(d => d.value),
-        ...comparisonData[compareCategory]?.map(d => d.value) || []
-      )
+      ...data.map(d => d.value),
+      ...comparisonData[compareCategory]?.map(d => d.value) || []
+    )
     : Math.min(...data.map(d => d.value));
-  
+
   const range = maxValue - minValue;
 
   // Create SVG path for the line with broader dimensions
@@ -59,7 +60,7 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
 
   const getComparisonOptions = () => {
     if (!comparisonData || !categoryNames) return [];
-    
+
     return Object.keys(comparisonData)
       .filter(key => key !== currentCategory)
       .map(key => ({
@@ -116,7 +117,7 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
                 <stop offset="100%" stopColor="#F97316" />
               </linearGradient>
             </defs>
-            
+
             {/* Grid - updated for new dimensions */}
             {[0, 1, 2, 3, 4, 5].map(i => (
               <line
@@ -130,7 +131,7 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
                 strokeWidth="1"
               />
             ))}
-            
+
             {/* Vertical grid lines for better readability */}
             {data.map((_, index) => (
               <line
@@ -144,7 +145,7 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
                 strokeWidth="1"
               />
             ))}
-            
+
             {/* Main line */}
             <path
               d={createPath(data, "#3F5BF6")}
@@ -155,7 +156,7 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
               strokeLinejoin="round"
               transform="translate(0, 20)"
             />
-            
+
             {/* Comparison line */}
             {comparisonLineData && (
               <path
@@ -169,7 +170,7 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
                 transform="translate(0, 20)"
               />
             )}
-            
+
             {/* Main data points with value labels positioned well above the line */}
             {data.map((point, index) => {
               const x = 40 + (index * 720) / (data.length - 1);
@@ -230,6 +231,8 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
 
             {/* X-axis date labels */}
             {data.map((point, index) => {
+              if (index % 5 !== 0 && index !== data.length - 1) return null; // show every 5th + last
+
               const x = 40 + (index * 720) / (data.length - 1);
               return (
                 <text
@@ -241,7 +244,7 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
                   fontSize="11"
                   fontWeight="500"
                 >
-                  {point.date}
+                  {point.sdate || point.date}
                 </text>
               );
             })}
@@ -257,7 +260,7 @@ const LineChart = ({ title, data, comparisonData, currentCategory = 'social', ca
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-5 h-0.5 bg-gradient-to-r from-[#7C3AED] to-[#F97316] opacity-80 rounded" style={{backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, #7C3AED 2px, #7C3AED 4px)'}}></div>
+                <div className="w-5 h-0.5 bg-gradient-to-r from-[#7C3AED] to-[#F97316] opacity-80 rounded" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, #7C3AED 2px, #7C3AED 4px)' }}></div>
                 <span className="text-xs text-[#0F172A] font-medium">
                   {getDisplayLabel(compareCategory)}
                 </span>

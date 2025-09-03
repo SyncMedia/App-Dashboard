@@ -4,8 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export interface KpiDataItemType {
   headline: string,
-  value: number,
-  delta: { value: number, period: string },
+  value: string | number,
+  delta?: { value: number, period: string },
   // trend: Array<{ date: string, value: number }>
 }
 interface KpiCardProps {

@@ -81,6 +81,7 @@ export const LogoutIcon = (props: IconProps) => (
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 512 512"
         fill="currentColor"
+        data-tooltip-id="my-tooltip"
         data-tooltip-content={props.toolTipContent || "Logout"}
         className={props.className}
         onClick={props.onClick}

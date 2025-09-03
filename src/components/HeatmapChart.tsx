@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface HeatmapData {
+export interface HeatmapData {
   hour: string;
   day: string;
   value: number;
@@ -37,7 +37,7 @@ const HeatmapChart = ({ title, data }: HeatmapChartProps) => {
     const key = `${day}-${hour}`;
     const value = dataMap.get(key) || 0;
     const intensity = getColorIntensity(value);
-    
+
     // Create a gradient from light to bright using our theme colors
     if (intensity === 0) return 'rgba(63, 91, 246, 0.1)';
     if (intensity < 0.2) return 'rgba(63, 91, 246, 0.2)';
@@ -63,7 +63,7 @@ const HeatmapChart = ({ title, data }: HeatmapChartProps) => {
               </div>
             ))}
           </div>
-          
+
           {/* Days and cells */}
           {days.map(day => (
             <div key={day} className="grid grid-cols-25 gap-1 items-center">

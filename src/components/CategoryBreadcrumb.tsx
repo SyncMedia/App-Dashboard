@@ -5,7 +5,7 @@ import React from "react";
 interface CategoryBreadcrumbProps {
   category: {
     name: string;
-    subtitle: string;
+    subtitle?: string;
   };
 }
 
@@ -18,8 +18,9 @@ const CategoryBreadcrumb = ({ category }: CategoryBreadcrumbProps) => {
             <div className="w-6 h-6 bg-white/20 rounded"></div>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#0F172A]">{category.name}</h1>
-            <p className="text-[#64748B]">{category.subtitle}</p>
+            <h1 className="text-2xl font-bold text-[#0F172A] capitalize">{category.name}</h1>
+            {category.subtitle && <p className="text-[#64748B]">{category.subtitle}</p>}
+
           </div>
         </div>
       </CardContent>
