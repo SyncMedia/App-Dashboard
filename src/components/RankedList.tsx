@@ -5,7 +5,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { useState } from "react";
 import { ReactNode } from "react";
 
-interface RankedItem {
+export interface RankedItem {
   rank: number;
   label: string;
   subtitle?: string;
@@ -23,7 +23,7 @@ interface RankedListProps {
 const RankedList = ({ title, data, onItemClick }: RankedListProps) => {
   const [itemsToShow, setItemsToShow] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   const totalPages = Math.ceil(data.length / itemsToShow);
   const startIndex = (currentPage - 1) * itemsToShow;
   const endIndex = startIndex + itemsToShow;
@@ -41,8 +41,8 @@ const RankedList = ({ title, data, onItemClick }: RankedListProps) => {
   const getAppIcon = (item: RankedItem) => {
     if (item.logo) {
       return (
-        <img 
-          src={item.logo} 
+        <img
+          src={item.logo}
           alt={item.label}
           className="w-8 h-8 rounded-full object-cover"
           onError={(e) => {
@@ -53,7 +53,7 @@ const RankedList = ({ title, data, onItemClick }: RankedListProps) => {
         />
       );
     }
-    
+
     return (
       <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#3F5BF6] to-[#F43F5E] flex items-center justify-center text-white text-sm font-bold">
         {item.label.charAt(0).toUpperCase()}
@@ -99,7 +99,7 @@ const RankedList = ({ title, data, onItemClick }: RankedListProps) => {
                 )}
               </div>
               <div>
-                <p className="text-[#0F172A] font-medium">{item.label}</p>
+                <p className="text-[#0F172A] font-medium capitalize">{item.label}</p>
                 {item.subtitle && (
                   <p className="text-xs text-[#64748B]">{item.subtitle}</p>
                 )}
@@ -115,13 +115,13 @@ const RankedList = ({ title, data, onItemClick }: RankedListProps) => {
             </div>
           </div>
         ))}
-        
+
         {totalPages > 1 && (
           <div className="mt-4 pt-4 border-t border-[#E2E8F0]">
             <Pagination>
               <PaginationContent className="text-[#0F172A]">
                 <PaginationItem>
-                  <PaginationPrevious 
+                  <PaginationPrevious
                     onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                     className={`text-[#0F172A] hover:bg-[#3F5BF6]/10 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   />
@@ -133,9 +133,8 @@ const RankedList = ({ title, data, onItemClick }: RankedListProps) => {
                       <PaginationLink
                         onClick={() => handlePageChange(page)}
                         isActive={currentPage === page}
-                        className={`text-[#0F172A] hover:bg-[#3F5BF6]/10 cursor-pointer ${
-                          currentPage === page ? 'bg-[#3F5BF6]/20' : ''
-                        }`}
+                        className={`text-[#0F172A] hover:bg-[#3F5BF6]/10 cursor-pointer ${currentPage === page ? 'bg-[#3F5BF6]/20' : ''
+                          }`}
                       >
                         {page}
                       </PaginationLink>
@@ -143,7 +142,7 @@ const RankedList = ({ title, data, onItemClick }: RankedListProps) => {
                   );
                 })}
                 <PaginationItem>
-                  <PaginationNext 
+                  <PaginationNext
                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                     className={`text-[#0F172A] hover:bg-[#3F5BF6]/10 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   />

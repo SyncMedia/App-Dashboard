@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface BarData {
+export interface BarData {
   label: string;
   value: number;
   color?: string;
@@ -29,9 +29,9 @@ const BarChart = ({ title, data, height = 200 }: BarChartProps) => {
                 {item.label}
               </div>
               <div className="flex-1 flex items-center space-x-2">
-                <div 
+                <div
                   className="h-6 rounded-md transition-all duration-300"
-                  style={{ 
+                  style={{
                     width: `${(item.value / maxValue) * 100}%`,
                     minWidth: '2px',
                     backgroundColor: item.color || '#3F5BF6'

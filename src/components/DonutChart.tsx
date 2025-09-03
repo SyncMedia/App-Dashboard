@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface DonutSegment {
+export interface DonutSegment {
   label: string;
   value: number;
   color: string;
@@ -14,7 +14,7 @@ interface DonutChartProps {
 
 const DonutChart = ({ title, segments }: DonutChartProps) => {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
-  
+
   let cumulativePercentage = 0;
   const segmentsWithOffset = segments.map(segment => {
     const percentage = (segment.value / total) * 100;
@@ -58,7 +58,7 @@ const DonutChart = ({ title, segments }: DonutChartProps) => {
         <div className="space-y-2">
           {segments.map((segment, index) => (
             <div key={index} className="flex items-center space-x-2">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: segment.color }}
               />

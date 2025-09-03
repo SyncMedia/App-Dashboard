@@ -1,99 +1,112 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Eye, Clock } from "lucide-react";
 import AppHeader from "./AppHeader";
 import PrimaryNavTabs from "./PrimaryNavTabs";
-import UniversalFilterBar, { loadFilters } from "./UniversalFilterBar";
-import KpiCard from "./KpiCard";
-import RankedList from "./RankedList";
-import BarChart from "./BarChart";
-import DonutChart from "./DonutChart";
+import UniversalFilterBar, { FilterState, loadFilters } from "./UniversalFilterBar";
+import KpiCard, { KpiDataItemType } from "./KpiCard";
+import RankedList, { RankedItem } from "./RankedList";
+import BarChart, { BarData } from "./BarChart";
+import DonutChart, { DonutSegment } from "./DonutChart";
 import ExportButton from "./ExportButton";
 import { loadClickhouseClient } from "@/utils/general";
+
+
+
+const LColors = [
+  ["#3F5BF6", "#556DF7", "#6B7FF8", "#8291F9", "#99A3FA",
+    "#AFB5FB", "#263FF5", "#1C35E1", "#142BCC", "#0C21B8",
+    "#3A65FF", "#5477FF", "#6E89FF", "#889BFF", "#A2ADFF",
+    "#C3C9FF", "#2D4AEF", "#233FDC", "#1935C9", "#0F2AB5",],
+
+  ["#F43F5E", "#F65572", "#F86B86", "#FA819A", "#FB97AE",
+    "#FDAEC2", "#E12C4B", "#CC2442", "#B81F3A", "#A41932",
+    "#FF4968", "#FF637E", "#FF7D94", "#FF97AA", "#FFB1C0",
+    "#FFC9D4", "#DC3552", "#C62E48", "#B0273F", "#9A2136",],
+
+  ["#10B981", "#29C291", "#42CBA1", "#5BD4B1", "#74DDC1",
+    "#8DE6D1", "#0DA673", "#0A9366", "#087F58", "#066C4B",
+    "#33C895", "#4ED1A5", "#69DAB5", "#84E3C5", "#9FEDD5",
+    "#B9F6E4", "#0EAB78", "#0C976A", "#0A835C", "#086F4E",],
+
+  ["#F59E0B", "#F6AB29", "#F7B847", "#F8C565", "#F9D283",
+    "#FAE0A1", "#E08F0A", "#CC8109", "#B77308", "#A26507",
+    "#FFAA1C", "#FFB738", "#FFC454", "#FFD170", "#FFDE8C",
+    "#FFEBAB", "#DB8A09", "#C77C08", "#B26E07", "#9D6106",],
+
+  ["#64748B", "#73829A", "#8290A9", "#919EB8", "#A0ACC7",
+    "#AFBAD6", "#59697E", "#4F5E71", "#455364", "#3B4857",
+    "#70809B", "#7F8EAA", "#8E9CB9", "#9DAAC8", "#ACB8D7",
+    "#BBC6E6", "#556175", "#4B5768", "#414D5B", "#37434E"],
+]
+
+const SColors = ['#3F5BF6', '#F43F5E', '#10B981', '#F59E0B', '#64748B']
+// { rank: 5, label: "Telegram", subtitle: "Social", metric: "1.2M", change: 15.4, logo: '....' },
+
+
+function areFiltersEqual(a?: FilterState[], b?: FilterState[]): boolean {
+  if (!a || !b) return false
+  if (a.length !== b.length) return false
+
+  return a.every((fa, i) => {
+    const fb = b[i]
+    return (
+      fa.metro === fb.metro &&
+      fa.nccs === fb.nccs &&
+      fa.gender === fb.gender &&
+      fa.ageGroup === fb.ageGroup &&
+      fa.dateRange.start.isSame(fb.dateRange.start, "day") &&
+      fa.dateRange.end.isSame(fb.dateRange.end, "day")
+    )
+  })
+}
+
+function useDeepCompareEffect(callback: React.EffectCallback, dependency: FilterState[]) {
+  const prevDepRef = useRef<FilterState[]>()
+
+  // Compare old vs new filters deeply
+  const isSame = areFiltersEqual(prevDepRef.current, dependency)
+
+  if (!isSame) {
+    prevDepRef.current = dependency
+  }
+
+  useEffect(callback, [prevDepRef.current])
+}
 
 const SnapshotDashboard = () => {
   const [filters, setFilters] = useState(loadFilters)
 
   // Sample data
-  const [kpiData, setKpiData] = useState([
+  const [kpiData, setKpiData] = useState<Array<KpiDataItemType>>([
     {
       headline: "Total DAU",
-      value: "",
+      value: 0,
       delta: { value: 0, period: "vs last day" },
-      trend: []
+      // trend: []
     },
     {
       headline: "Total WAU",
-      value: "",
+      value: 0,
       delta: { value: 0, period: "vs last week" },
-      trend: []
+      // trend: []
     },
     {
       headline: "Total MAU",
-      value: "24.1M",
+      value: 0,
       delta: { value: 0, period: "vs last month" },
-      trend: []
+      // trend: []
     }
   ])
 
-  const topOpenedApps = [
-    { rank: 1, label: "WhatsApp", subtitle: "Social", metric: "2.1M", change: 5.2, logo: "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" },
-    { rank: 2, label: "Instagram", subtitle: "Social", metric: "1.8M", change: 12.3, logo: "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" },
-    { rank: 3, label: "YouTube", subtitle: "Entertainment", metric: "1.6M", change: -3.1, logo: "https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" },
-    { rank: 4, label: "Facebook", subtitle: "Social", metric: "1.4M", change: 8.7, logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" },
-    { rank: 5, label: "Telegram", subtitle: "Social", metric: "1.2M", change: 15.4 },
-    { rank: 6, label: "Twitter", subtitle: "Social", metric: "1.1M", change: -2.3 },
-    { rank: 7, label: "Snapchat", subtitle: "Social", metric: "0.9M", change: 7.8 },
-    { rank: 8, label: "TikTok", subtitle: "Entertainment", metric: "0.8M", change: 25.1 },
-    { rank: 9, label: "LinkedIn", subtitle: "Professional", metric: "0.7M", change: 4.2 },
-    { rank: 10, label: "Pinterest", subtitle: "Social", metric: "0.6M", change: 9.3 },
-    { rank: 11, label: "Reddit", subtitle: "Social", metric: "0.5M", change: 12.7 },
-    { rank: 12, label: "Discord", subtitle: "Communication", metric: "0.4M", change: 18.9 },
-    { rank: 13, label: "Skype", subtitle: "Communication", metric: "0.3M", change: -8.1 },
-    { rank: 14, label: "Viber", subtitle: "Communication", metric: "0.2M", change: -5.4 },
-    { rank: 15, label: "Signal", subtitle: "Communication", metric: "0.1M", change: 22.6 }
-  ];
-
-  const topUsedApps = [
-    { rank: 1, label: "YouTube", subtitle: "Entertainment", metric: "3.2hrs", change: 8.1, logo: "https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" },
-    { rank: 2, label: "Instagram", subtitle: "Social", metric: "2.8hrs", change: 15.2, logo: "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" },
-    { rank: 3, label: "WhatsApp", subtitle: "Social", metric: "2.1hrs", change: 3.4, logo: "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" },
-    { rank: 4, label: "Netflix", subtitle: "Entertainment", metric: "1.9hrs", change: 22.1 },
-    { rank: 5, label: "Spotify", subtitle: "Music", metric: "1.7hrs", change: 12.8 },
-    { rank: 6, label: "TikTok", subtitle: "Entertainment", metric: "1.5hrs", change: 28.3 },
-    { rank: 7, label: "Facebook", subtitle: "Social", metric: "1.3hrs", change: 5.7, logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" },
-    { rank: 8, label: "Telegram", subtitle: "Social", metric: "1.1hrs", change: 11.2 },
-    { rank: 9, label: "Twitter", subtitle: "Social", metric: "0.9hrs", change: -4.6 },
-    { rank: 10, label: "Amazon Prime", subtitle: "Entertainment", metric: "0.8hrs", change: 19.4 },
-    { rank: 11, label: "Disney+", subtitle: "Entertainment", metric: "0.7hrs", change: 31.2 },
-    { rank: 12, label: "Snapchat", subtitle: "Social", metric: "0.6hrs", change: 8.9 },
-    { rank: 13, label: "LinkedIn", subtitle: "Professional", metric: "0.5hrs", change: 7.3 },
-    { rank: 14, label: "Pinterest", subtitle: "Social", metric: "0.4hrs", change: 13.8 },
-    { rank: 15, label: "Reddit", subtitle: "Social", metric: "0.3hrs", change: 16.4 }
-  ];
-
-  const trendingCategories = [
-    { rank: 1, label: "Entertainment", subtitle: "Video & Music", metric: "+18.2%", change: 18.2 },
-    { rank: 2, label: "Social", subtitle: "Messaging & Social", metric: "+12.4%", change: 12.4 },
-    { rank: 3, label: "Shopping", subtitle: "E-commerce", metric: "+9.7%", change: 9.7 }
-  ];
-
-  const metroDistribution = [
-    { label: "Mumbai", value: 28, color: "#3F5BF6" },
-    { label: "Delhi", value: 24, color: "#F43F5E" },
-    { label: "Bangalore", value: 18, color: "#10B981" },
-    { label: "Chennai", value: 15, color: "#F59E0B" },
-    { label: "Others", value: 15, color: "#64748B" }
-  ];
-
-  const genderDistribution = [
-    { label: "Male", value: 52, color: "#3F5BF6" },
-    { label: "Female", value: 45, color: "#F43F5E" },
-    { label: "Other", value: 3, color: "#64748B" }
-  ];
+  const [topOpenedApps, setTopOpenedApps] = useState<Array<RankedItem>>([])
+  const [topUsedApps, setTopUsedApps] = useState<Array<RankedItem>>([])
+  const [trendingCategories, setTopTrendingCategories] = useState<Array<RankedItem>>([])
+  const [metroDistribution, setMetroDistribution] = useState<Array<BarData>>([])
+  const [genderDistribution, setGenderDistribution] = useState<Array<DonutSegment>>([])
 
   const handleExport = (format: string) => {
-    console.log(`Exporting dashboard as ${format}`);
+
     // Implement export logic
   };
 
@@ -109,43 +122,43 @@ const SnapshotDashboard = () => {
 
   const client = useMemo(loadClickhouseClient, []);
 
-  useEffect(() => {
+  const loadDauMauWau = useCallback(async () => {
     const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
     const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
     const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
     const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
 
-    const q = `WITH 
+    const q = `WITH max_date AS 
     (
-        SELECT max(toDate(start_ts)) 
+        SELECT max(toDate(start_ts)) AS max_date
         FROM prod.app_usage_stat
         WHERE start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
-    ) AS max_date
+    ) 
+    SELECT
+      SUMIf(projection_factor, toDate(start_ts) = m.max_date) AS dau,
+      SUMIf(projection_factor, toDate(start_ts) = subtractDays(m.max_date, 1)) AS ldau,
+      SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 6) AND m.max_date) AS wau,
+      SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 14) AND subtractDays(m.max_date, 7)) AS lwau,
+      SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 30) AND m.max_date) AS mau,
+      SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 60) AND subtractDays(m.max_date, 31)) AS lmau
+    FROM (
+      SELECT DISTINCT 
+        aus.token, 
+        proj.projection_factor,
+        aus.start_ts
+      FROM prod.app_usage_stat AS aus
+      INNER JOIN prod.sdk_device_projections AS proj
+        ON aus.token = proj.device_id
+      WHERE
+        aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+        ${metrosFilter}
+        ${nccsFilter}
+        ${genderFilter}
+        ${ageGroupFilter}
+    ) AS unique_devices
+    JOIN max_date m ON 1=1`
 
-SELECT
-    COUNT(DISTINCT if(toDate(aus.start_ts) = max_date, aus.token, NULL)) AS DAU,
-    COUNT(DISTINCT if(toDate(aus.start_ts) BETWEEN (max_date - INTERVAL 1 DAY) AND max_date, aus.token, NULL)) AS LDAU,
-    COUNT(DISTINCT if(toDate(aus.start_ts) >= (max_date - INTERVAL 7 DAY), aus.token, NULL)) AS WAU,
-    COUNT(DISTINCT if(toDate(aus.start_ts) BETWEEN (max_date - INTERVAL 14 DAY) AND (max_date - INTERVAL 7 DAY), aus.token, NULL)) AS LWAU,
-    COUNT(DISTINCT if(toDate(aus.start_ts) >= (max_date - INTERVAL 30 DAY), aus.token, NULL)) AS MAU,
-    COUNT(DISTINCT if(toDate(aus.start_ts) BETWEEN (max_date - INTERVAL 60 DAY) AND (max_date - INTERVAL 30 DAY), aus.token, NULL)) AS LMAU
-FROM prod.app_usage_stat AS aus
-INNER JOIN prod.sdk_device_projections AS proj
-    ON aus.token = proj.device_id
-WHERE 
-    aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
-    ${metrosFilter}
-    ${nccsFilter}
-    ${genderFilter}
-    ${ageGroupFilter}`
-    // GROUP BY
-    //     proj.center,
-    //     proj.sec,
-    //     proj.age_group,
-    //     proj.gender`
-
-
-    client.query({
+    const data = await client.query({
       query: q,
       format: 'JSONEachRow',
       query_params: {
@@ -158,27 +171,366 @@ WHERE
       }
     })
       .then(resultSet => resultSet.json())
-      .then(data => {
-        console.log("KPI Data:", data);
 
-        //   value: "",
-        // delta: { value: 0, period: "vs last day" },
+    console.log("KPI Data:", data);
 
-        let newKpidata = JSON.parse(JSON.stringify(kpiData));
-        newKpidata = newKpidata.map((kpi, index) => {
-          switch (kpi.headline) {
-            case "Total DAU":
-              return { ...kpi, value: data[0]['DAU'], delta: { ...kpi.delta, value: data[0]['LDAU'] } };
-            case "Total WAU":
-              return { ...kpi, value: data[0]['WAU'], delta: { ...kpi.delta, value: data[0]['LWAU'] } };
-            case "Total MAU":
-              return { ...kpi, value: data[0]['MAU'], delta: { ...kpi.delta, value: data[0]['LMAU'] } };
-          }
-        })
+    const newKpidata = JSON.parse(JSON.stringify(kpiData)) as Array<KpiDataItemType>
+    [['dau', 'ldau'], ['wau', 'lwau'], ['mau', 'lmau']].forEach(([field, lfield], idx) => {
+      newKpidata[idx].value = data[0][field].toFixed(2)
+      newKpidata[idx].delta.value = 100;
+      if (data[0][lfield] > 0) {
+        newKpidata[idx].delta.value = Math.round(100 * (data[0][field] - data[0][lfield]) / data[0][lfield])
+      } else if (data[0][field] > 0) {
+        newKpidata[idx].delta.value = 100;
+      }
+    })
 
-        setKpiData(newKpidata);
-      })
+    setKpiData(newKpidata);
+  }, [filters])
 
+  const loadTopReachedApps = useCallback(async () => {
+    const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
+    const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
+    const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
+    const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
+    //https://ik.imagekit.io/syncmedia/appography/whatsapp2_KjLZaiTow
+    const q = `
+    SELECT
+        app_name,
+        category,
+        ROUND(SUM(device_proj), 2) AS reach,
+        any(logo) logo
+    FROM (
+        SELECT
+            app.nickname AS app_name,
+            app.category AS category,
+            proj.device_id,
+            MAX(proj.projection_factor) AS device_proj,
+            any(app.logo) AS logo
+        FROM prod.app_usage_stat AS aus
+        INNER JOIN prod.sdk_device_projections AS proj
+            ON aus.token = proj.device_id
+        INNER JOIN prod.sdk_app_meta AS app
+            ON aus.package = app.package
+        WHERE
+          aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+          ${metrosFilter}
+          ${nccsFilter}
+          ${genderFilter}
+          ${ageGroupFilter}
+        GROUP BY app.nickname, app.category, proj.device_id
+    ) AS t
+    GROUP BY app_name, category
+    ORDER BY reach DESC
+    LIMIT 100`
+
+    const data = await client.query({
+      query: q,
+      format: 'JSONEachRow',
+      query_params: {
+        var_starttime: filters.dateRange.start.format("YYYY-MM-DD HH:mm:ss"),
+        var_endtime: filters.dateRange.end.format("YYYY-MM-DD HH:mm:ss"),
+        metros_filter: filters.metro,
+        nccs_filter: filters.nccs,
+        gender_filter: filters.gender,
+        age_group_filter: filters.ageGroup
+      }
+    })
+      .then(resultSet => resultSet.json())
+
+    // { rank: 5, label: "Telegram", subtitle: "Social", metric: "1.2M", change: 15.4 },
+
+    const parsed = data.map((row, index) => {
+      let logo = row['logo'] || ''
+      if (logo !== '') {
+        logo = `${logo}/tr:w-256,h-256`
+      }
+
+      return {
+        rank: index,
+        label: row['app_name'],
+        subtitle: row['category'],
+        metric: row['reach'] + 'M',
+        change: 0,
+        logo: logo
+      }
+    })
+
+    setTopOpenedApps(parsed)
+  }, [filters])
+
+  const loadTopUsedApps = useCallback(async () => {
+    const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
+    const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
+    const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
+    const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
+
+    const q = `
+    SELECT
+      app.nickname AS app_name,
+      app.category AS category,
+      ROUND(SUM(aus.duration) / 3600, 2) AS total_duration_hours,
+      any(app.logo) AS logo
+    FROM prod.app_usage_stat AS aus
+    INNER JOIN prod.sdk_device_projections AS proj
+        ON aus.token = proj.device_id
+    INNER JOIN prod.sdk_app_meta AS app
+        ON aus.package = app.package
+    WHERE
+        aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+        ${metrosFilter}
+        ${nccsFilter}
+        ${genderFilter}
+        ${ageGroupFilter}
+    GROUP BY
+        app.nickname,
+        app.category
+    QUALIFY total_duration_hours > 0
+    ORDER BY
+        total_duration_hours DESC
+        LIMIT 100`
+
+    const data = await client.query({
+      query: q,
+      format: 'JSONEachRow',
+      query_params: {
+        var_starttime: filters.dateRange.start.format("YYYY-MM-DD HH:mm:ss"),
+        var_endtime: filters.dateRange.end.format("YYYY-MM-DD HH:mm:ss"),
+        metros_filter: filters.metro,
+        nccs_filter: filters.nccs,
+        gender_filter: filters.gender,
+        age_group_filter: filters.ageGroup
+      }
+    })
+      .then(resultSet => resultSet.json())
+
+    // { rank: 5, label: "Telegram", subtitle: "Social", metric: "1.2M", change: 15.4 },
+
+    const parsed = data.map((row, index) => {
+      let logo = row['logo'] || ''
+      if (logo !== '') {
+        logo = `${logo}/tr:w-256,h-256`
+      }
+
+      return {
+        rank: index,
+        label: row['app_name'],
+        subtitle: row['category'],
+        metric: row['total_duration_hours'] + 'hrs',
+        change: 0,
+        logo: logo
+      }
+    })
+
+    setTopUsedApps(parsed)
+  }, [filters])
+
+  const loadTopTrendingCategories = useCallback(async () => {
+    const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
+    const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
+    const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
+    const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
+
+    const q = `
+      WITH category_reach AS (
+          SELECT
+              COALESCE(category, 'Other') AS category,
+              SUM(projection_factor) AS reach
+          FROM (
+              SELECT DISTINCT
+                  aus.token,
+                  appmeta.category AS category,
+                  proj.projection_factor
+              FROM prod.app_usage_stat AS aus
+              LEFT JOIN prod.sdk_app_meta AS appmeta
+                  ON aus.package = appmeta.package
+              INNER JOIN prod.sdk_device_projections AS proj
+                  ON aus.token = proj.device_id
+              WHERE
+                  aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+                  ${metrosFilter}
+                  ${nccsFilter}
+                  ${genderFilter}
+                  ${ageGroupFilter}
+          ) t
+          GROUP BY category
+          HAVING category != ''
+      )
+      SELECT
+          category,
+          ROUND(reach * 100 / SUM(reach) OVER (), 2) AS pct_share
+      FROM category_reach
+      ORDER BY pct_share DESC
+      LIMIT 3`
+
+    const data = await client.query({
+      query: q,
+      format: 'JSONEachRow',
+      query_params: {
+        var_starttime: filters.dateRange.start.format("YYYY-MM-DD HH:mm:ss"),
+        var_endtime: filters.dateRange.end.format("YYYY-MM-DD HH:mm:ss"),
+        metros_filter: filters.metro,
+        nccs_filter: filters.nccs,
+        gender_filter: filters.gender,
+        age_group_filter: filters.ageGroup
+      }
+    })
+      .then(resultSet => resultSet.json())
+
+    const parsed = data.map((row, index) => {
+      let logo = row['logo'] || ''
+      if (logo !== '') {
+        logo = `${logo}/tr:w-256,h-256`
+      }
+
+      return {
+        rank: index,
+        label: row['category'],
+        metric: row['pct_share'] + '%',
+        change: 0,
+        logo: logo
+      }
+    })
+
+    setTopTrendingCategories(parsed)
+  }, [filters])
+
+  const loadMetroDistribution = useCallback(async () => {
+    const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
+    const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
+    const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
+    const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
+
+    const q = `
+      WITH unique_devices AS (
+        SELECT 
+            aus.token,
+            proj.projection_factor,
+            proj.center
+        FROM prod.app_usage_stat AS aus
+        INNER JOIN prod.sdk_device_projections AS proj
+            ON aus.token = proj.device_id
+        WHERE 
+          aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+          ${metrosFilter}
+          ${nccsFilter}
+          ${genderFilter}
+          ${ageGroupFilter}
+        GROUP BY aus.token, proj.projection_factor, proj.center
+      )
+      SELECT
+          center AS metro,
+          SUM(projection_factor) AS reach,
+          ROUND(100.0 * SUM(projection_factor) / SUM(SUM(projection_factor)) OVER (), 2) AS percentage
+      FROM unique_devices
+      GROUP BY center
+      ORDER BY percentage DESC`
+
+    const data = await client.query({
+      query: q,
+      format: 'JSONEachRow',
+      query_params: {
+        var_starttime: filters.dateRange.start.format("YYYY-MM-DD HH:mm:ss"),
+        var_endtime: filters.dateRange.end.format("YYYY-MM-DD HH:mm:ss"),
+        metros_filter: filters.metro,
+        nccs_filter: filters.nccs,
+        gender_filter: filters.gender,
+        age_group_filter: filters.ageGroup
+      }
+    })
+      .then(resultSet => resultSet.json())
+
+
+    const parsed = data.map((row, index) => {
+      return {
+        label: row['metro'],
+        value: row['percentage'],
+        color: SColors[index]
+      }
+    })
+
+    setMetroDistribution(parsed)
+  }, [filters])
+
+  const loadGenderSummary = useCallback(async () => {
+    const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
+    const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
+    const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
+    const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
+
+    const q = `
+    WITH total AS (
+      SELECT SUM(projection_factor) AS total_reach
+      FROM (
+          SELECT DISTINCT aus.token, proj.projection_factor AS projection_factor
+          FROM prod.app_usage_stat AS aus
+          INNER JOIN prod.sdk_device_projections AS proj
+              ON aus.token = proj.device_id
+          LEFT JOIN prod.sdk_app_meta AS meta
+              ON aus.package = meta.package
+          WHERE 
+            aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+            ${metrosFilter}
+            ${nccsFilter}
+            ${genderFilter}
+            ${ageGroupFilter}
+      ) AS unique_devices
+    )
+    SELECT 
+        gender,
+        ROUND(100.0 * SUM(projection_factor) / total.total_reach, 2) AS reach_percentage
+    FROM (
+        SELECT DISTINCT aus.token, proj.projection_factor, proj.gender
+        FROM prod.app_usage_stat AS aus
+        INNER JOIN prod.sdk_device_projections AS proj
+            ON aus.token = proj.device_id
+        LEFT JOIN prod.sdk_app_meta AS meta
+            ON aus.package = meta.package
+        WHERE 
+          aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+          ${metrosFilter}
+          ${nccsFilter}
+          ${genderFilter}
+          ${ageGroupFilter}
+    ) AS unique_devices
+    JOIN total ON 1 = 1
+    GROUP BY gender, total.total_reach
+    ORDER BY reach_percentage DESC`
+
+    const data = await client.query({
+      query: q,
+      format: 'JSONEachRow',
+      query_params: {
+        var_starttime: filters.dateRange.start.format("YYYY-MM-DD HH:mm:ss"),
+        var_endtime: filters.dateRange.end.format("YYYY-MM-DD HH:mm:ss"),
+        metros_filter: filters.metro,
+        nccs_filter: filters.nccs,
+        gender_filter: filters.gender,
+        age_group_filter: filters.ageGroup
+      }
+    })
+      .then(resultSet => resultSet.json())
+
+
+    const parsed = data.map((row, index) => {
+      return {
+        label: row['gender'],
+        value: row['reach_percentage'],
+        color: SColors[index]
+      }
+    })
+
+    setGenderDistribution(parsed)
+  }, [filters])
+
+  // 
+  useDeepCompareEffect(() => {
+    loadDauMauWau()
+    loadTopReachedApps()
+    loadTopUsedApps()
+    loadTopTrendingCategories()
+    loadMetroDistribution()
+    loadGenderSummary()
   }, [filters])
 
   return (
@@ -202,10 +554,8 @@ WHERE
           {kpiData.map((kpi) => (
             <KpiCard
               key={kpi.headline}
-              headline={kpi.headline}
-              value={kpi.value}
-              delta={kpi.delta}
-              trend={kpi.trend}
+              item={kpi}
+
               onClick={() => handleKpiClick(kpi.headline)}
             />
           ))}
@@ -218,7 +568,7 @@ WHERE
             <RankedList
               title={
                 <div className="flex items-center gap-2">
-                  <span>Top 5 Most Reached Apps</span>
+                  <span>Top Most Reached Apps</span>
                   <div className="flex items-center gap-1 bg-[#3F5BF6]/10 px-2 py-1 rounded-full">
                     <Eye className="w-3 h-3 text-[#3F5BF6]" />
                     <span className="text-xs text-[#64748B]">Opens</span>
@@ -231,7 +581,7 @@ WHERE
             <RankedList
               title={
                 <div className="flex items-center gap-2">
-                  <span>Top 5 Most Frequently Opened Apps</span>
+                  <span>Top Most Frequently Opened Apps</span>
                   <div className="flex items-center gap-1 bg-[#F43F5E]/10 px-2 py-1 rounded-full">
                     <Clock className="w-3 h-3 text-[#F43F5E]" />
                     <span className="text-xs text-[#64748B]">Time</span>
@@ -267,7 +617,7 @@ WHERE
         </div>
       </main>
 
-      <ExportButton onExport={handleExport} />
+      {/* <ExportButton onExport={handleExport} /> */}
     </div>
   );
 };

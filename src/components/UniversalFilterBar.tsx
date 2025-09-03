@@ -11,9 +11,8 @@ import { useEffect, useState } from "react";
 import moment from "moment";
 import Datepicker from "react-tailwindcss-datepicker";
 import { isMobile } from 'react-device-detect';
-import { set } from "date-fns";
 
-interface FilterState {
+export interface FilterState {
   dateRange: {
     start: moment.Moment;
     end: moment.Moment;
@@ -40,13 +39,7 @@ const defaultFilters = {
   ageGroup: "All Ages"
 };
 
-export const loadFilters = (): {
-  dateRange: { start: moment.Moment; end: moment.Moment };
-  metro: string;
-  nccs: string;
-  gender: string;
-  ageGroup: string;
-} => {
+export const loadFilters = (): FilterState => {
   const savedFilters = JSON.parse(localStorage.getItem("universalFilters") || "{}");
   if ('dateRange' in savedFilters) {
     savedFilters.dateRange = {
