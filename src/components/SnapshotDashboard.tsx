@@ -541,7 +541,7 @@ const SnapshotDashboard = () => {
           {/* Row 2: Categories and Metro Distribution */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <RankedList
-              title="Top 3 Trending Categories"
+              title="Top Trending Categories"
               data={trendingCategories}
               onItemClick={(item) => handleAppClick('category', item)}
             />
