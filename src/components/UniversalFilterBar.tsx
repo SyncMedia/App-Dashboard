@@ -143,7 +143,7 @@ const UniversalFilterBar = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
-            {["All NCCS", "A1", "A2", "B1", "B2", "C", "D", "E"].map((nccs) => (
+            {["All NCCS", "SEC A", "SEC B", "SEC C", "SEC C/D/E"].map((nccs) => (
               <DropdownMenuItem
                 key={nccs}
                 onClick={() => updateFilter("nccs", nccs)}
@@ -183,7 +183,7 @@ const UniversalFilterBar = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
-            {["All Ages", "13-17", "18-24", "25-34", "35-44", "45-54", "55+"].map((ageGroup) => (
+            {["All Ages", "18-24", "25-30", "31-40", "40+"].map((ageGroup) => (
               <DropdownMenuItem
                 key={ageGroup}
                 onClick={() => updateFilter("ageGroup", ageGroup)}
