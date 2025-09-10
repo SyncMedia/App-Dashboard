@@ -144,6 +144,7 @@ const CategoryDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <BarChart
                 title="Metro-wise Distribution"
+                height={230}
                 data={metroDistribution}
               />
               <DonutChart
