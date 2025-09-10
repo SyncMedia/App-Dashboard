@@ -19,26 +19,26 @@ const SnapshotDashboard = () => {
   const [filters, setFilters] = useState(loadFilters)
 
   // Sample data
-  const [kpiData, setKpiData] = useState<Array<KpiDataItemType>>([
-    {
-      headline: "Total DAU",
-      value: 0,
-      delta: { value: 0, period: "vs last day" },
-      // trend: []
-    },
-    {
-      headline: "Total WAU",
-      value: 0,
-      delta: { value: 0, period: "vs last week" },
-      // trend: []
-    },
-    {
-      headline: "Total MAU",
-      value: 0,
-      delta: { value: 0, period: "vs last month" },
-      // trend: []
-    }
-  ])
+  // const [kpiData, setKpiData] = useState<Array<KpiDataItemType>>([
+  //   {
+  //     headline: "Total DAU",
+  //     value: 0,
+  //     delta: { value: 0, period: "vs last day" },
+  //     // trend: []
+  //   },
+  //   {
+  //     headline: "Total WAU",
+  //     value: 0,
+  //     delta: { value: 0, period: "vs last week" },
+  //     // trend: []
+  //   },
+  //   {
+  //     headline: "Total MAU",
+  //     value: 0,
+  //     delta: { value: 0, period: "vs last month" },
+  //     // trend: []
+  //   }
+  // ])
 
   const [topOpenedApps, setTopOpenedApps] = useState<Array<RankedItem>>([])
   const [topUsedApps, setTopUsedApps] = useState<Array<RankedItem>>([])
@@ -70,69 +70,69 @@ const SnapshotDashboard = () => {
 
   const client = useMemo(loadClickhouseClient, []);
 
-  const loadDauMauWau = useCallback(async () => {
-    const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
-    const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
-    const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
-    const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
+  // const loadDauMauWau = useCallback(async () => {
+  //   const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
+  //   const nccsFilter = filters.nccs !== "All NCCS" ? " AND proj.sec = {nccs_filter: String} " : "";
+  //   const genderFilter = filters.gender !== "All Genders" ? " AND proj.gender = {gender_filter: String}" : "";
+  //   const ageGroupFilter = filters.ageGroup !== "All Ages" ? " AND proj.age_group = {age_group_filter: String}" : "";
 
-    const q = `WITH max_date AS 
-    (
-        SELECT max(toDate(start_ts)) AS max_date
-        FROM prod.app_usage_stat
-        WHERE start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
-    ) 
-    SELECT
-      SUMIf(projection_factor, toDate(start_ts) = m.max_date) AS dau,
-      SUMIf(projection_factor, toDate(start_ts) = subtractDays(m.max_date, 1)) AS ldau,
-      SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 6) AND m.max_date) AS wau,
-      SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 14) AND subtractDays(m.max_date, 7)) AS lwau,
-      SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 29) AND m.max_date) AS mau,
-      SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 60) AND subtractDays(m.max_date, 30)) AS lmau
-    FROM (
-      SELECT DISTINCT 
-        aus.token, 
-        proj.projection_factor,
-        aus.start_ts
-      FROM prod.app_usage_stat AS aus
-      INNER JOIN prod.sdk_device_projections AS proj
-        ON aus.token = proj.device_id
-      WHERE
-        aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
-        ${metrosFilter}
-        ${nccsFilter}
-        ${genderFilter}
-        ${ageGroupFilter}
-    ) AS unique_devices
-    JOIN max_date m ON 1=1`
+  //   const q = `WITH max_date AS 
+  //   (
+  //       SELECT max(toDate(start_ts)) AS max_date
+  //       FROM prod.app_usage_stat
+  //       WHERE start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+  //   ) 
+  //   SELECT
+  //     SUMIf(projection_factor, toDate(start_ts) = m.max_date) AS dau,
+  //     SUMIf(projection_factor, toDate(start_ts) = subtractDays(m.max_date, 1)) AS ldau,
+  //     SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 6) AND m.max_date) AS wau,
+  //     SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 14) AND subtractDays(m.max_date, 7)) AS lwau,
+  //     SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 29) AND m.max_date) AS mau,
+  //     SUMIf(projection_factor, toDate(start_ts) BETWEEN subtractDays(m.max_date, 60) AND subtractDays(m.max_date, 30)) AS lmau
+  //   FROM (
+  //     SELECT DISTINCT 
+  //       aus.token, 
+  //       proj.projection_factor,
+  //       aus.start_ts
+  //     FROM prod.app_usage_stat AS aus
+  //     INNER JOIN prod.sdk_device_projections AS proj
+  //       ON aus.token = proj.device_id
+  //     WHERE
+  //       aus.start_ts BETWEEN {var_starttime: DateTime} AND {var_endtime: DateTime}
+  //       ${metrosFilter}
+  //       ${nccsFilter}
+  //       ${genderFilter}
+  //       ${ageGroupFilter}
+  //   ) AS unique_devices
+  //   JOIN max_date m ON 1=1`
 
-    const data = await client.query({
-      query: q,
-      format: 'JSONEachRow',
-      query_params: {
-        var_starttime: filters.dateRange.start.format("YYYY-MM-DD HH:mm:ss"),
-        var_endtime: filters.dateRange.end.format("YYYY-MM-DD HH:mm:ss"),
-        metros_filter: filters.metro,
-        nccs_filter: filters.nccs,
-        gender_filter: filters.gender,
-        age_group_filter: filters.ageGroup
-      }
-    })
-      .then(resultSet => resultSet.json())
+  //   const data = await client.query({
+  //     query: q,
+  //     format: 'JSONEachRow',
+  //     query_params: {
+  //       var_starttime: filters.dateRange.start.format("YYYY-MM-DD HH:mm:ss"),
+  //       var_endtime: filters.dateRange.end.format("YYYY-MM-DD HH:mm:ss"),
+  //       metros_filter: filters.metro,
+  //       nccs_filter: filters.nccs,
+  //       gender_filter: filters.gender,
+  //       age_group_filter: filters.ageGroup
+  //     }
+  //   })
+  //     .then(resultSet => resultSet.json())
 
-    const newKpidata = JSON.parse(JSON.stringify(kpiData)) as Array<KpiDataItemType>
-    [['dau', 'ldau'], ['wau', 'lwau'], ['mau', 'lmau']].forEach(([field, lfield], idx) => {
-      newKpidata[idx].value = data[0][field].toFixed(2)
-      newKpidata[idx].delta.value = 100;
-      if (data[0][lfield] > 0) {
-        newKpidata[idx].delta.value = Math.round(100 * (data[0][field] - data[0][lfield]) / data[0][lfield])
-      } else if (data[0][field] > 0) {
-        newKpidata[idx].delta.value = 100;
-      }
-    })
+  //   const newKpidata = JSON.parse(JSON.stringify(kpiData)) as Array<KpiDataItemType>
+  //   [['dau', 'ldau'], ['wau', 'lwau'], ['mau', 'lmau']].forEach(([field, lfield], idx) => {
+  //     newKpidata[idx].value = data[0][field].toFixed(2)
+  //     newKpidata[idx].delta.value = 100;
+  //     if (data[0][lfield] > 0) {
+  //       newKpidata[idx].delta.value = Math.round(100 * (data[0][field] - data[0][lfield]) / data[0][lfield])
+  //     } else if (data[0][field] > 0) {
+  //       newKpidata[idx].delta.value = 100;
+  //     }
+  //   })
 
-    setKpiData(newKpidata);
-  }, [filters])
+  //   setKpiData(newKpidata);
+  // }, [filters])
 
   const loadTopReachedApps = useCallback(async () => {
     const metrosFilter = filters.metro !== "All Metros" ? " AND proj.center = {metros_filter: String} " : "";
@@ -307,7 +307,7 @@ const SnapshotDashboard = () => {
           ROUND(reach * 100 / SUM(reach) OVER (), 2) AS pct_share
       FROM category_reach
       ORDER BY pct_share DESC
-      LIMIT 3`
+      LIMIT 100`
 
     const data = await client.query({
       query: q,
@@ -471,7 +471,7 @@ const SnapshotDashboard = () => {
 
   // 
   useDeepCompareEffect(() => {
-    loadDauMauWau()
+    // loadDauMauWau()
     loadTopReachedApps()
     loadTopUsedApps()
     loadTopTrendingCategories()
@@ -496,7 +496,7 @@ const SnapshotDashboard = () => {
 
       <main className="p-6 space-y-6">
         {/* KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {kpiData.map((kpi) => (
             <KpiCard
               key={kpi.headline}
@@ -504,7 +504,7 @@ const SnapshotDashboard = () => {
               onClick={() => handleKpiClick(kpi.headline)}
             />
           ))}
-        </div>
+        </div> */}
 
         {/* Main Grid */}
         <div className="space-y-6">

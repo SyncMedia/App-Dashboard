@@ -68,19 +68,19 @@ const CategoryDashboard = () => {
       setCategoryKpis(
         [{
           headline: "Total Users",
-          value: data.tau + "M",
+          value: data.tau + " M",
         },
         {
           headline: "WAU",
-          value: data.wau + "M",
+          value: data.wau + " M",
         },
         {
           headline: "MAU",
-          value: data.mau + "M",
+          value: data.mau + " M",
         },
         {
           headline: "Avg Sessions",
-          value: data.avg_sess,
+          value: data.avg_sess + " min",
         }])
     })
 

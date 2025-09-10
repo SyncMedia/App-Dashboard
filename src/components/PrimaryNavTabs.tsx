@@ -24,13 +24,13 @@ const PrimaryNavTabs = ({ activeTab = "home", onTabChange }: PrimaryNavTabsProps
       { id: "home", label: "Home", icon: Home, href: "/" },
     ]
 
-    if (location.pathname.includes("/category/")) {
-      tabs.push({ id: "category", label: "Category", icon: BarChart3, href: location.pathname });
-    }
+    // if (location.pathname.includes("/category/")) {
+    tabs.push({ id: "category", label: "Category", icon: BarChart3, href: location.pathname });
+    // }
 
-    if (location.pathname.includes("/app/")) {
-      tabs.push({ id: "app", label: "App", icon: Smartphone, href: location.pathname });
-    }
+    // if (location.pathname.includes("/app/")) {
+    tabs.push({ id: "app", label: "App", icon: Smartphone, href: location.pathname });
+    // }
 
     return tabs;
 

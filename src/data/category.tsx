@@ -147,7 +147,7 @@ const avgSession = async (
 ): Promise<number> => {
     const q = `
     SELECT 
-        ROUND(SUM(aus.duration) / 60 / COUNT(DISTINCT aus.token), 2) AS avg_session_duration_minutes
+        ROUND(AVG(aus.duration) / 60, 2) AS avg_session_duration_minutes
     FROM prod.app_usage_stat AS aus
     INNER JOIN prod.sdk_app_meta AS meta
         ON aus.package = meta.package
@@ -236,19 +236,22 @@ export const loadTopAppsByCategory = async (
     SELECT 
         app_name,
         category,
-        ROUND(SUM(daily_reach), 2) AS dau
+        ROUND(SUM(daily_reach), 2) AS dau,
+        any(logo) AS logo
     FROM (
         -- Compute daily reach per app using unique devices
         SELECT 
             app_name,
             category,
             date,
-            SUM(projection_factor) AS daily_reach
+            SUM(projection_factor) AS daily_reach,
+            any(logo) AS logo
         FROM (
             SELECT 
                 toDate(aus.start_ts) AS date,
                 COALESCE(meta.nickname, aus.package) AS app_name,
                 COALESCE(meta.category, 'Other') AS category,
+                any(meta.logo) AS logo,
                 proj.device_id,
                 proj.projection_factor
             FROM prod.app_usage_stat AS aus
