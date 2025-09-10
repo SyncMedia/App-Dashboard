@@ -163,7 +163,7 @@ const UniversalFilterBar = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white border border-[#E2E8F0]">
-            {["All Genders", "Male", "Female"].map((gender) => (
+            {["All Genders", "MALE", "FEMALE"].map((gender) => (
               <DropdownMenuItem
                 key={gender}
                 onClick={() => updateFilter("gender", gender)}
